@@ -74,7 +74,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Dataset")
     data_path_input = st.text_input(
-        "CSV path",
+        "Bundled dataset path (server file - for your own CSV use the 'Upload & Analyze' tab)",
         value=str(ROOT / "data" / "ai4i2020.csv"),
     )
     st.markdown("---")
@@ -116,12 +116,13 @@ except FileNotFoundError as e:
 # ══════════════════════════════════════════════════════════════════════════════
 #  TAB DEFINITIONS
 # ══════════════════════════════════════════════════════════════════════════════
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "📊 Data Explorer",
     "🧠 Classical ML",
     "🔬 Deep Learning",
     "📈 Visual Analytics",
     "🚀 Offloading Lab",
+    "📁 Upload & Analyze",
 ])
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -513,3 +514,11 @@ with tab5:
                 st.success("✅ Well within tight latency budget (< 50 ms)")
             else:
                 st.warning("⚠️ Consider EDGE offloading for tight budgets")
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  TAB 6 — UPLOAD & ANALYZE (any CSV)
+# ══════════════════════════════════════════════════════════════════════════════
+with tab6:
+    from src.upload_tab import render as _render_upload
+    _render_upload()
+
