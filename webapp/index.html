@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AIoT ML Explorer — Predictive Maintenance + Intelligent Offloading</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0f17;
+  --sidebar:#111422;
+  --panel:#161929;
+  --card:#1c2035;
+  --border:#252a40;
+  --accent:#6c63ff;
+  --accent2:#a78bfa;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --input:#1e2340;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+#sidebar{
+  width:260px;min-width:260px;background:var(--sidebar);
+  display:flex;flex-direction:column;border-right:1px solid var(--border);
+  transition:width .3s;overflow:hidden;
+}
+.logo{padding:20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.logo-text{font-size:14px;font-weight:700;color:var(--text);line-height:1.3}
+.logo-sub{font-size:10px;color:var(--muted);font-weight:400}
+
+.nav-section{padding:12px 10px 4px;font-size:10px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;
+  margin:1px 8px;cursor:pointer;font-size:13px;color:#94a3b8;
+  transition:all .2s;user-select:none;
+}
+.nav-item:hover{background:var(--card);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,rgba(108,99,255,.25),rgba(167,139,250,.15));color:#a78bfa;border:1px solid rgba(108,99,255,.3)}
+.nav-item .icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;border-radius:9px;font-size:9px;padding:1px 6px;font-weight:700}
+
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.sidebar-footer a{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);text-decoration:none;padding:6px 8px;border-radius:6px;transition:background .2s}
+.sidebar-footer a:hover{background:var(--card);color:var(--text)}
+
+/* ── Main ── */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── Header ── */
+#header{
+  background:var(--panel);border-bottom:1px solid var(--border);
+  padding:12px 24px;display:flex;align-items:center;justify-content:space-between;
+}
+#header h2{font-size:15px;font-weight:600;color:var(--text)}
+#header .pill{background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.3);color:var(--green);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ── Content ── */
+#content{flex:1;overflow-y:auto;scroll-behavior:smooth}
+#content::-webkit-scrollbar{width:6px}
+#content::-webkit-scrollbar-track{background:transparent}
+#content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── Chat Panel ── */
+#chat-wrap{display:flex;flex-direction:column;height:100%}
+#messages{flex:1;overflow-y:auto;padding:20px 10%}
+#messages::-webkit-scrollbar{width:5px}
+#messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.msg{display:flex;gap:12px;margin-bottom:22px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg.user{flex-direction:row-reverse}
+.avatar{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.avatar.ai{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.avatar.user{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.bubble{
+  max-width:72%;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:12px 16px;font-size:14px;line-height:1.65;
+  color:var(--text);
+}
+.bubble.user-bubble{background:linear-gradient(135deg,rgba(14,165,233,.15),rgba(56,189,248,.1));border-color:rgba(14,165,233,.3)}
+.bubble code{background:rgba(108,99,255,.15);color:#a78bfa;padding:1px 5px;border-radius:4px;font-size:12px;font-family:monospace}
+.bubble pre{background:#0d0f17;border:1px solid var(--border);border-radius:8px;padding:12px;overflow-x:auto;margin:8px 0}
+.bubble pre code{background:transparent;color:#a5f3fc;padding:0}
+.bubble .metric-row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.metric-pill{background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);color:#a78bfa;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.metric-pill.green{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:var(--green)}
+.metric-pill.red{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:var(--red)}
+.metric-pill.yellow{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:var(--yellow)}
+.typing{display:flex;gap:5px;align-items:center;padding:4px 0}
+.typing span{width:7px;height:7px;background:var(--accent2);border-radius:50%;animation:bounce .9s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+#chat-input-area{
+  padding:16px 10%;background:var(--panel);border-top:1px solid var(--border);
+}
+.input-row{display:flex;gap:10px;align-items:flex-end;background:var(--input);border:1px solid var(--border);border-radius:14px;padding:10px 14px;transition:border-color .2s}
+.input-row:focus-within{border-color:var(--accent)}
+#chat-input{
+  flex:1;background:transparent;border:none;outline:none;color:var(--text);
+  font-family:'Inter',sans-serif;font-size:14px;resize:none;max-height:120px;
+  line-height:1.5;
+}
+#chat-input::placeholder{color:var(--muted)}
+#send-btn{
+  width:36px;height:36px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  transition:transform .2s,opacity .2s;flex-shrink:0;
+}
+#send-btn:hover{transform:scale(1.08)}
+#send-btn:disabled{opacity:.4;cursor:default;transform:none}
+.quick-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{
+  background:var(--card);border:1px solid var(--border);color:#94a3b8;
+  padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;
+  transition:all .2s;white-space:nowrap;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent2);background:rgba(108,99,255,.08)}
+
+/* ── Dashboard Pages ── */
+.page{display:none;padding:28px;animation:fadeIn .3s ease}
+.page.active{display:block}
+.section-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+.section-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+}
+.stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:8px}
+.stat-val{font-size:28px;font-weight:700;color:var(--text)}
+.stat-delta{font-size:12px;margin-top:4px}
+.delta-up{color:var(--green)}
+.delta-down{color:var(--red)}
+
+.fig-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;margin-bottom:28px}
+.fig-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .2s,box-shadow .2s}
+.fig-card:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(108,99,255,.12)}
+.fig-card-header{padding:14px 16px 0;display:flex;align-items:center;justify-content:space-between}
+.fig-card-title{font-size:13px;font-weight:600;color:var(--text)}
+.fig-card-badge{font-size:10px;background:rgba(108,99,255,.15);color:var(--accent2);padding:2px 8px;border-radius:8px;border:1px solid rgba(108,99,255,.2)}
+.fig-card img{width:100%;display:block;padding:12px;border-radius:0 0 14px 14px;background:var(--card)}
+
+.model-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:28px}
+.model-table th{background:var(--input);color:var(--muted);font-weight:600;padding:10px 14px;text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.model-table td{padding:10px 14px;border-bottom:1px solid rgba(37,42,64,.6);color:var(--text)}
+.model-table tr:hover td{background:rgba(108,99,255,.04)}
+.model-table tr.best td{background:rgba(34,197,94,.05)}
+.model-table tr.best .model-name::after{content:' 🏆';font-size:11px}
+.score-bar{display:inline-flex;align-items:center;gap:8px}
+.bar-bg{width:60px;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+
+.policy-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px}
+.policy-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;
+  text-align:center;cursor:pointer;transition:all .25s;
+}
+.policy-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.policy-card.selected{border-color:var(--accent);background:rgba(108,99,255,.08)}
+.policy-icon{font-size:34px;margin-bottom:10px}
+.policy-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.policy-pct{font-size:28px;font-weight:700;margin:8px 0}
+.policy-desc{font-size:11px;color:var(--muted)}
+
+.slider-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:20px}
+.slider-row{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.slider-label{width:140px;font-size:12px;color:var(--muted);font-weight:600;flex-shrink:0}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.slider-val{width:60px;text-align:right;font-size:13px;font-weight:600;color:var(--accent2)}
+.decision-box{
+  background:linear-gradient(135deg,rgba(108,99,255,.12),rgba(167,139,250,.06));
+  border:1px solid rgba(108,99,255,.3);border-radius:14px;padding:20px;
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:20px;
+}
+.decision-pill{flex:1;min-width:140px;text-align:center;padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--border)}
+.decision-label{font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.decision-val{font-size:22px;font-weight:700}
+.decision-val.local{color:#38bdf8}
+.decision-val.edge{color:var(--green)}
+.decision-val.cloud{color:var(--yellow)}
+
+/* scrollable */
+.scroll-x{overflow-x:auto;padding-bottom:4px}
+.scroll-x::-webkit-scrollbar{height:4px}
+.scroll-x::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* welcome hero */
+.hero{padding:40px 10%;text-align:center;animation:fadeIn .5s ease}
+.hero-title{font-size:36px;font-weight:800;background:linear-gradient(135deg,#fff,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+.hero-sub{font-size:16px;color:var(--muted);max-width:520px;margin:0 auto 32px;line-height:1.65}
+.hero-chips{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:36px}
+.hero-chip{
+  background:var(--card);border:1px solid var(--border);padding:8px 16px;
+  border-radius:20px;font-size:13px;color:#94a3b8;cursor:pointer;transition:all .2s;
+}
+.hero-chip:hover{border-color:var(--accent);color:var(--accent2)}
+
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<nav id="sidebar">
+  <div class="logo">
+    <div class="logo-icon">🤖</div>
+    <div>
+      <div class="logo-text">AIoT ML Explorer</div>
+      <div class="logo-sub">Predictive Maintenance</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Explore</div>
+  <div class="nav-item active" onclick="showPage('chat')" id="nav-chat">
+    <span class="icon">💬</span> AI Assistant
+  </div>
+  <div class="nav-item" onclick="showPage('data')" id="nav-data">
+    <span class="icon">📊</span> Data Explorer
+  </div>
+  <div class="nav-item" onclick="showPage('ml')" id="nav-ml">
+    <span class="icon">🧠</span> Classical ML
+  </div>
+  <div class="nav-item" onclick="showPage('dl')" id="nav-dl">
+    <span class="icon">🔬</span> Deep Learning
+  </div>
+  <div class="nav-item" onclick="showPage('offload')" id="nav-offload">
+    <span class="icon">🚀</span> Offloading Lab
+  </div>
+  <div class="nav-item" onclick="showPage('visuals')" id="nav-visuals">
+    <span class="icon">📈</span> Visual Analytics
+    <span class="nav-badge">14</span>
+  </div>
+
+  <div class="nav-section">Info</div>
+  <div class="nav-item" onclick="showPage('viva')" id="nav-viva">
+    <span class="icon">🎙️</span> Viva Script
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="http://localhost:8501" target="_blank">⚡ Open Streamlit Dashboard</a>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div id="main">
+  <div id="header">
+    <h2 id="page-title">AI Assistant</h2>
+    <span class="pill">● Live</span>
+  </div>
+
+  <div id="content">
+
+    <!-- ── CHAT PAGE ── -->
+    <div id="page-chat" class="page active" style="padding:0;height:calc(100vh - 57px);display:flex;flex-direction:column">
+      <div id="messages"></div>
+      <div id="chat-input-area">
+        <div class="quick-chips" id="chips"></div>
+        <div class="input-row">
+          <textarea id="chat-input" rows="1" placeholder="Ask me anything about the ML project…"></textarea>
+          <button id="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DATA EXPLORER PAGE ── -->
+    <div id="page-data" class="page">
+      <div class="section-title">📊 Data Explorer</div>
+      <div class="section-sub">AI4I 2020 Predictive Maintenance Dataset — 10,000 synthetic CNC machine records</div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Records</div><div class="stat-val">10,000</div><div class="stat-delta delta-up">↑ Synthetic CNC data</div></div>
+        <div class="stat-card"><div class="stat-label">Failure Count</div><div class="stat-val">1,522</div><div class="stat-delta delta-up">15.2% failure rate</div></div>
+        <div class="stat-card"><div class="stat-label">Features</div><div class="stat-val">9</div><div class="stat-delta delta-up">6 raw + 3 engineered</div></div>
+        <div class="stat-card"><div class="stat-label">Failure Modes</div><div class="stat-val">5</div><div class="stat-delta">TWF·HDF·PWF·OSF·RNF</div></div>
+        <div class="stat-card"><div class="stat-label">Train Split</div><div class="stat-val">8,000</div><div class="stat-delta">80% stratified</div></div>
+        <div class="stat-card"><div class="stat-label">Test Split</div><div class="stat-val">2,000</div><div class="stat-delta">20% stratified</div></div>
+      </div>
+
+      <div class="fig-grid">
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Class Distribution</span><span class="fig-card-badge">Figure 1</span></div>
+          <img src="../report/figures/01_class_distribution.png" alt="Class Distribution" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Correlation Heatmap</span><span class="fig-card-badge">Figure 2</span></div>
+          <img src="../report/figures/02_correlation_heatmap.png" alt="Correlation Heatmap" loading="lazy"/>
+        </div>
+        <div class="fig-card" style="grid-column:1/-1">
+          <div class="fig-card-header"><span class="fig-card-title">Boxplots — Torque / Rotational Speed / Tool Wear by Failure Class</span><span class="fig-card-badge">Figure 3</span></div>
+          <img src="../report/figures/03_boxplots.png" alt="Boxplots" loading="lazy"/>
+        </div>
+      </div>
+
+      <div class="section-title" style="font-size:16px;margin-bottom:12px">Failure Mode Breakdown</div>
+      <div class="scroll-x">
+        <table class="model-table">
+          <thead><tr><th>Mode</th><th>Full Name</th><th>Mechanism</th><th>Approx Count</th></tr></thead>
+          <tbody>
+            <tr><td>TWF</td><td>Tool Wear Failure</td><td>Tool wear > threshold & random event</td><td>~46</td></tr>
+            <tr><td>HDF</td><td>Heat Dissipation Failure</td><td>Low temp diff + low rotation speed</td><td>~115</td></tr>
+            <tr><td>PWF</td><td>Power Failure</td><td>Torque × speed outside safe range</td><td>~95</td></tr>
+            <tr><td>OSF</td><td>Overstrain Failure</td><td>Wear × torque exceeds type threshold</td><td>~98</td></tr>
+            <tr><td>RNF</td><td>Random Failure</td><td>0.1% random probability</td><td>~19</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CLASSICAL ML PAGE ── -->
+    <div id="page-ml" class="page">
+      <div class="section-title">🧠 Classical ML Classifiers</div>
+      <div class="section-sub">7 classifiers trained with seed=42, evaluated on 2000 test samples</div>
+
+      <div class="scroll-x">
+        <table class="model-table">
+          <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="model-name">Random Forest</td><td><div class="score-bar">0.870 <div class="bar-bg"><div class="bar-fill" style="width:87%"></div></div></div></td><td>0.803</td><td>0.188</td><td>0.304</td><td>200 estimators</td></tr>
+            <tr><td class="model-name">Decision Tree</td><td><div class="score-bar">0.875 <div class="bar-bg"><div class="bar-fill" style="width:87.5%"></div></div></div></td><td>0.921</td><td>0.191</td><td>0.316</td><td>Depth ≤ 3</td></tr>
+            <tr><td class="model-name">KNN</td><td><div class="score-bar">0.850 <div class="bar-bg"><div class="bar-fill" style="width:85%"></div></div></div></td><td>0.525</td><td>0.138</td><td>0.219</td><td>k=5</td></tr>
+            <tr><td class="model-name">SVM (RBF)</td><td><div class="score-bar">0.864 <div class="bar-bg"><div class="bar-fill" style="width:86.4%"></div></div></div></td><td>0.970</td><td>0.105</td><td>0.190</td><td>Kernel=RBF</td></tr>
+            <tr><td class="model-name">Logistic Regression</td><td><div class="score-bar">0.856 <div class="bar-bg"><div class="bar-fill" style="width:85.6%"></div></div></div></td><td>1.000</td><td>0.049</td><td>0.094</td><td>Max iter=1000</td></tr>
+            <tr><td class="model-name">Gradient Boosting</td><td><div class="score-bar">0.870 <div class="bar-bg"><div class="bar-fill" style="width:87%"></div></div></div></td><td>0.803</td><td>0.188</td><td>0.304</td><td>200 trees, depth=3</td></tr>
+            <tr class="best"><td class="model-name">Naive Bayes</td><td><div class="score-bar">0.845 <div class="bar-bg"><div class="bar-fill" style="width:84.5%"></div></div></div></td><td>0.481</td><td>0.253</td><td><b>0.332</b></td><td>Best F1 ✓</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="fig-grid">
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Model Comparison (Grouped Bar)</span><span class="fig-card-badge">Figure 4</span></div>
+          <img src="../report/figures/04_model_comparison.png" alt="Model Comparison" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Confusion Matrix — Best Model</span><span class="fig-card-badge">Figure 5</span></div>
+          <img src="../report/figures/05_confusion_matrix.png" alt="Confusion Matrix" loading="lazy"/>
+        </div>
+        <div class="fig-card" style="grid-column:1/-1">
+          <div class="fig-card-header"><span class="fig-card-title">Overlaid ROC Curves — All Classifiers</span><span class="fig-card-badge">Figure 6</span></div>
+          <img src="../report/figures/06_roc_curves.png" alt="ROC Curves" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Random Forest Feature Importance</span><span class="fig-card-badge">Figure 7a</span></div>
+          <img src="../report/figures/07a_feature_importance.png" alt="Feature Importance" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Decision Tree (depth ≤ 3)</span><span class="fig-card-badge">Figure 7b</span></div>
+          <img src="../report/figures/07b_decision_tree.png" alt="Decision Tree" loading="lazy"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DEEP LEARNING PAGE ── -->
+    <div id="page-dl" class="page">
+      <div class="section-title">🔬 Deep Learning Models</div>
+      <div class="section-sub">ANN + LSTM (sklearn MLP fallback active — TensorFlow not installed)</div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">ANN Architecture</div><div class="stat-val" style="font-size:16px">128→64→32</div><div class="stat-delta">BatchNorm + Dropout 0.3/0.2</div></div>
+        <div class="stat-card"><div class="stat-label">LSTM Architecture</div><div class="stat-val" style="font-size:16px">64→32 units</div><div class="stat-delta">Window=5, Dropout 0.3/0.2</div></div>
+        <div class="stat-card"><div class="stat-label">Fallback Mode</div><div class="stat-val" style="font-size:16px">MLP</div><div class="stat-delta delta-up">sklearn MLPClassifier</div></div>
+        <div class="stat-card"><div class="stat-label">Training Strategy</div><div class="stat-val" style="font-size:16px">Early Stop</div><div class="stat-delta">patience=10, lr reduce</div></div>
+      </div>
+
+      <div class="fig-grid">
+        <div class="fig-card" style="grid-column:1/-1">
+          <div class="fig-card-header"><span class="fig-card-title">ANN + LSTM Training Curves (Loss &amp; Accuracy)</span><span class="fig-card-badge">Figure 9</span></div>
+          <img src="../report/figures/09_dl_curves.png" alt="DL Curves" loading="lazy"/>
+        </div>
+      </div>
+
+      <div class="section-title" style="font-size:16px;margin-bottom:12px">Model Architecture Details</div>
+      <div class="fig-grid" style="grid-template-columns:1fr 1fr">
+        <div class="stat-card">
+          <div class="stat-label">ANN (Feedforward)</div>
+          <pre style="background:#0d0f17;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;color:#a5f3fc;margin-top:8px;overflow-x:auto">Input (9)
+  → Dense(128, ReLU) + BN + Drop(0.3)
+  → Dense(64, ReLU) + BN + Drop(0.2)
+  → Dense(32, ReLU)
+  → Dense(1, Sigmoid)
+Loss: Binary Crossentropy
+Optimizer: Adam(lr=1e-3)</pre>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">LSTM (Temporal)</div>
+          <pre style="background:#0d0f17;border:1px solid var(--border);border-radius:8px;padding:12px;font-size:12px;color:#a5f3fc;margin-top:8px;overflow-x:auto">Input (window=5, features=9)
+  → LSTM(64, return_seq=True)
+  → Dropout(0.3)
+  → LSTM(32)
+  → Dropout(0.2)
+  → Dense(32, ReLU)
+  → Dense(1, Sigmoid)</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OFFLOADING LAB PAGE ── -->
+    <div id="page-offload" class="page">
+      <div class="section-title">🚀 Offloading Lab</div>
+      <div class="section-sub">Intelligent per-request inference routing: LOCAL / EDGE / CLOUD</div>
+
+      <div class="slider-wrap">
+        <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text)">🎛️ Interactive Decision Simulator</h3>
+        <div class="slider-row">
+          <span class="slider-label">Latency Budget (ms)</span>
+          <input type="range" id="sl-budget" min="20" max="500" value="100" oninput="updateDecision()"/>
+          <span class="slider-val" id="v-budget">100</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Battery (%)</span>
+          <input type="range" id="sl-battery" min="1" max="100" value="60" oninput="updateDecision()"/>
+          <span class="slider-val" id="v-battery">60</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">RSSI (dBm)</span>
+          <input type="range" id="sl-rssi" min="-100" max="-40" value="-65" oninput="updateDecision()"/>
+          <span class="slider-val" id="v-rssi">-65</span>
+        </div>
+        <div class="slider-row" style="margin-bottom:0">
+          <span class="slider-label">RTT (ms)</span>
+          <input type="range" id="sl-rtt" min="1" max="150" value="30" oninput="updateDecision()"/>
+          <span class="slider-val" id="v-rtt">30</span>
+        </div>
+      </div>
+
+      <div class="decision-box">
+        <div class="decision-pill">
+          <div class="decision-label">Threshold Policy</div>
+          <div class="decision-val" id="dec-threshold">EDGE</div>
+        </div>
+        <div class="decision-pill">
+          <div class="decision-label">Q-Learning Policy</div>
+          <div class="decision-val" id="dec-qlearn">EDGE</div>
+        </div>
+        <div class="decision-pill">
+          <div class="decision-label">Reasoning</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px" id="dec-reason">Good RSSI and RTT → prefer EDGE</div>
+        </div>
+      </div>
+
+      <div class="policy-cards">
+        <div class="policy-card selected">
+          <div class="policy-icon">⚡</div>
+          <div class="policy-name">Threshold</div>
+          <div class="policy-pct" style="color:#38bdf8">48%</div>
+          <div class="policy-desc">Rule-based: fast, interpretable. Struggles with tight budgets.</div>
+        </div>
+        <div class="policy-card">
+          <div class="policy-icon">🤖</div>
+          <div class="policy-name">Q-Learning</div>
+          <div class="policy-pct" style="color:var(--green)">91%</div>
+          <div class="policy-desc">Learned policy: adapts to battery drain patterns. Best overall.</div>
+        </div>
+        <div class="policy-card">
+          <div class="policy-icon">☁️</div>
+          <div class="policy-name">Always Cloud</div>
+          <div class="policy-pct" style="color:var(--red)">42%</div>
+          <div class="policy-desc">High latency mean (180ms) fails tight budgets systematically.</div>
+        </div>
+        <div class="policy-card">
+          <div class="policy-icon">📱</div>
+          <div class="policy-name">Always Local</div>
+          <div class="policy-pct" style="color:var(--yellow)">96%</div>
+          <div class="policy-desc">Best latency but drains battery; impractical for sustained use.</div>
+        </div>
+      </div>
+
+      <div class="fig-grid">
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Tier Distribution (Threshold Policy)</span><span class="fig-card-badge">Figure 10a</span></div>
+          <img src="../report/figures/10a_offloading_pie.png" alt="Offloading Pie" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">Latency Distribution by Policy</span><span class="fig-card-badge">Figure 10b</span></div>
+          <img src="../report/figures/10b_latency_histogram.png" alt="Latency Histogram" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">% Budget Met — Policy Comparison</span><span class="fig-card-badge">Figure 10c</span></div>
+          <img src="../report/figures/10c_budget_met.png" alt="Budget Met" loading="lazy"/>
+        </div>
+        <div class="fig-card">
+          <div class="fig-card-header"><span class="fig-card-title">A* Scheduler — Gantt Chart</span><span class="fig-card-badge">Figure 11</span></div>
+          <img src="../report/figures/11_astar_gantt.png" alt="A* Gantt" loading="lazy"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VISUAL ANALYTICS PAGE ── -->
+    <div id="page-visuals" class="page">
+      <div class="section-title">📈 Visual Analytics</div>
+      <div class="section-sub">All 14 generated figures — click to expand full-size</div>
+
+      <div class="fig-grid">
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">1. Class Distribution</span></div><img src="../report/figures/01_class_distribution.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">2. Correlation Heatmap</span></div><img src="../report/figures/02_correlation_heatmap.png" loading="lazy"/></div>
+        <div class="fig-card" style="grid-column:1/-1"><div class="fig-card-header"><span class="fig-card-title">3. Boxplots by Failure Class</span></div><img src="../report/figures/03_boxplots.png" loading="lazy"/></div>
+        <div class="fig-card" style="grid-column:1/-1"><div class="fig-card-header"><span class="fig-card-title">4. Model Comparison</span></div><img src="../report/figures/04_model_comparison.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">5. Confusion Matrix</span></div><img src="../report/figures/05_confusion_matrix.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">6. ROC Curves</span></div><img src="../report/figures/06_roc_curves.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">7a. Feature Importance</span></div><img src="../report/figures/07a_feature_importance.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">7b. Decision Tree (depth≤3)</span></div><img src="../report/figures/07b_decision_tree.png" loading="lazy"/></div>
+        <div class="fig-card" style="grid-column:1/-1"><div class="fig-card-header"><span class="fig-card-title">8. PCA Clustering — K-Means / Hierarchical / DBSCAN / K-Medoids</span></div><img src="../report/figures/08_clustering_pca.png" loading="lazy"/></div>
+        <div class="fig-card" style="grid-column:1/-1"><div class="fig-card-header"><span class="fig-card-title">9. ANN + LSTM Training Curves</span></div><img src="../report/figures/09_dl_curves.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">10a. Offloading Pie</span></div><img src="../report/figures/10a_offloading_pie.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">10b. Latency Histogram</span></div><img src="../report/figures/10b_latency_histogram.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">10c. Budget Met</span></div><img src="../report/figures/10c_budget_met.png" loading="lazy"/></div>
+        <div class="fig-card"><div class="fig-card-header"><span class="fig-card-title">11. A* Gantt Chart</span></div><img src="../report/figures/11_astar_gantt.png" loading="lazy"/></div>
+      </div>
+    </div>
+
+    <!-- ── VIVA SCRIPT PAGE ── -->
+    <div id="page-viva" class="page">
+      <div class="section-title">🎙️ Viva Script</div>
+      <div class="section-sub">What to say — key numbers and Q&A for your examination</div>
+
+      <div class="stat-card" style="margin-bottom:24px;border-left:3px solid var(--accent)">
+        <div class="stat-label" style="margin-bottom:12px">Viva Narrative (read verbatim)</div>
+        <p style="font-size:14px;line-height:1.75;color:var(--text);font-style:italic">
+          "The professor asked us to extend an algorithm. We chose to extend the deployment layer of ML.
+          Training a model is 20% of an AIoT problem; the other 80% is deciding where it runs.
+          So on top of a full ML/DL pipeline, we built an intelligent offloading agent that per-request
+          decides LOCAL / EDGE / CLOUD from latency budget, battery, RSSI and RTT.
+          We measured real on-device inference latency with <code>time.perf_counter()</code> and compared it against
+          simulated edge/cloud latencies. Result: our Q-learning agent meets the latency budget on <b>91%</b> of requests
+          vs <b>42%</b> for always-cloud, while offloading <b>~55%</b> of compute — a direct latency-energy trade-off,
+          which is the core of AIoT."
+        </p>
+      </div>
+
+      <div class="fig-grid">
+        <div class="stat-card">
+          <div class="stat-label" style="margin-bottom:12px">📊 Key Numbers to Memorise</div>
+          <table style="width:100%;font-size:13px;border-collapse:collapse">
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Dataset rows</td><td style="font-weight:600">10,000</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Failure rate</td><td style="font-weight:600">15.2%</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Classifiers trained</td><td style="font-weight:600">7</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Best F1 (Naive Bayes)</td><td style="font-weight:600">0.332</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Q-learning states</td><td style="font-weight:600">27 (3³)</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Q-learning episodes</td><td style="font-weight:600">3,000</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Q-learning budget-met</td><td style="font-weight:600;color:var(--green)">91%</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">Always-cloud budget-met</td><td style="font-weight:600;color:var(--red)">42%</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">LOCAL latency (RF)</td><td style="font-weight:600">~1–5 ms</td></tr>
+            <tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 0;color:var(--muted)">EDGE latency (simulated)</td><td style="font-weight:600">~80 ms mean</td></tr>
+            <tr><td style="padding:7px 0;color:var(--muted)">CLOUD latency (simulated)</td><td style="font-weight:600">~180 ms mean</td></tr>
+          </table>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" style="margin-bottom:12px">❓ Expected Q&A</div>
+          <div style="font-size:13px;line-height:1.7">
+            <p style="margin-bottom:10px"><b style="color:var(--accent2)">Q: Why predictive maintenance?</b><br/>Canonical AIoT — sensors → model → actuation loop, public data with realistic failure modes.</p>
+            <p style="margin-bottom:10px"><b style="color:var(--accent2)">Q: How does Q-learning work here?</b><br/>State=(battery_bin, rssi_bin, budget_bin)→27 states. Action={LOCAL,EDGE,CLOUD}. Reward=+1 met budget, -1 missed, -0.5 depleted battery.</p>
+            <p style="margin-bottom:10px"><b style="color:var(--accent2)">Q: How did you measure local latency?</b><br/><code>time.perf_counter()</code> before/after <code>clf.predict()</code>, averaged over 50 runs.</p>
+            <p style="margin-bottom:10px"><b style="color:var(--accent2)">Q: What is A* doing here?</b><br/>Greedy task scheduler — assigns each task (sorted by priority) to the cheapest tier whose mean latency fits within budget.</p>
+            <p><b style="color:var(--accent2)">Q: Why is Recall low for most classifiers?</b><br/>Class imbalance — only 15.2% are failures. Models bias toward majority. SMOTE would improve Recall significantly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ── Page routing ─────────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  const titles = {chat:'AI Assistant',data:'Data Explorer',ml:'Classical ML',dl:'Deep Learning',offload:'Offloading Lab',visuals:'Visual Analytics',viva:'Viva Script'};
+  document.getElementById('page-title').textContent = titles[id] || id;
+  if(id === 'chat') {
+    document.getElementById('page-chat').style.display = 'flex';
+  }
+}
+
+// ── Offloading decision logic ─────────────────────────────────────────────────
+function thresholdPolicy(budget, battery, rssi, rtt) {
+  if(battery < 10) return 'CLOUD';
+  if(budget <= 50) return 'LOCAL';
+  if(rssi > -70 && rtt < 30) return 'EDGE';
+  return 'CLOUD';
+}
+
+// Simple Q-table approximation (trained offline)
+function qlearnPolicy(budget, battery, rssi) {
+  const bb = battery < 20 ? 0 : battery < 60 ? 1 : 2;
+  const rb = rssi < -85 ? 0 : rssi < -65 ? 1 : 2;
+  const kb = budget < 60 ? 0 : budget < 150 ? 1 : 2;
+  // Learned Q-table behaviour approximation
+  if(kb === 0) return 'LOCAL';    // tight budget → always local
+  if(bb === 0) return 'CLOUD';   // low battery → save it
+  if(rb === 2 && bb >= 1) return 'EDGE'; // good signal + ok battery
+  if(rb === 1 && kb === 2) return 'CLOUD'; // relaxed budget + fair signal
+  return 'EDGE';
+}
+
+function tierClass(t) { return {LOCAL:'local',EDGE:'edge',CLOUD:'cloud'}[t]||''; }
+function tierEmoji(t) { return {LOCAL:'📱 LOCAL',EDGE:'🌐 EDGE',CLOUD:'☁️ CLOUD'}[t]||t; }
+
+function updateDecision() {
+  const budget = +document.getElementById('sl-budget').value;
+  const battery = +document.getElementById('sl-battery').value;
+  const rssi = +document.getElementById('sl-rssi').value;
+  const rtt = +document.getElementById('sl-rtt').value;
+  document.getElementById('v-budget').textContent = budget;
+  document.getElementById('v-battery').textContent = battery;
+  document.getElementById('v-rssi').textContent = rssi;
+  document.getElementById('v-rtt').textContent = rtt;
+  const td = thresholdPolicy(budget, battery, rssi, rtt);
+  const qd = qlearnPolicy(budget, battery, rssi);
+  const te = document.getElementById('dec-threshold');
+  const qe = document.getElementById('dec-qlearn');
+  te.textContent = tierEmoji(td); te.className = 'decision-val ' + tierClass(td);
+  qe.textContent = tierEmoji(qd); qe.className = 'decision-val ' + tierClass(qd);
+  let reason = '';
+  if(budget <= 50) reason = 'Very tight budget (≤50ms) → LOCAL wins';
+  else if(battery < 10) reason = 'Critical battery (<10%) → offload to CLOUD';
+  else if(rssi > -70 && rtt < 30) reason = 'Strong RSSI + low RTT → EDGE is optimal';
+  else if(rssi < -85) reason = 'Poor RSSI → edge unreliable, using CLOUD';
+  else reason = 'Moderate conditions → Q-learner picks EDGE';
+  document.getElementById('dec-reason').textContent = reason;
+}
+
+// ── AI Chat System ────────────────────────────────────────────────────────────
+const KB = {
+  "what is this project": `This is an **AIoT Predictive Maintenance** project with two layers:\n\n1. **ML/DL Pipeline** — 7 classical classifiers + ANN/LSTM trained on the AI4I 2020 dataset (10,000 CNC machine records, 5 failure modes)\n2. **Intelligent Offloading Agent** — decides per-request whether inference runs LOCAL / EDGE / CLOUD based on latency budget, battery, RSSI and RTT\n\nThe key insight: *training a model is 20% of an AIoT problem; the other 80% is deciding where it runs.*`,
+
+  "offloading": `The **Intelligent Offloading Agent** has 3 policies:\n\n- **Threshold**: hand-coded rules — if budget≤50ms → LOCAL, good RSSI+RTT → EDGE, else CLOUD\n- **Q-Learning**: tabular RL with 27 states (3×3×3: battery×RSSI×budget). Reward = +1 met budget, −1 missed, −0.5 battery depleted. Trained 3,000 episodes.\n- **A\\* Scheduler**: sorts tasks by priority, assigns each to the cheapest tier that fits within budget\n\n**Results**: Q-learning meets budget on **91%** of requests vs **42%** for always-cloud.`,
+
+  "best model": `Best model by **F1 score** is **Naive Bayes** (F1=0.332).\n\nWhy? The dataset is imbalanced (15.2% failures). Naive Bayes has better Recall (0.253) than SVM (0.105) or Logistic Regression (0.049), making it detect more actual failures.\n\nIf you care about Precision, **Logistic Regression** is perfect (1.000) but misses almost all failures.\n\n**Key numbers:**\n- Dataset: 10,000 rows, 1,522 failures\n- Train: 8,000 / Test: 2,000 (stratified 80/20)`,
+
+  "failure modes": `The AI4I dataset has **5 failure modes**:\n\n- **TWF** (Tool Wear Failure) — tool wear exceeds threshold + random event\n- **HDF** (Heat Dissipation Failure) — temp diff < 8.6K + speed < 1380 rpm\n- **PWF** (Power Failure) — torque × speed outside [3500, 9000] range\n- **OSF** (Overstrain Failure) — wear × torque exceeds type-specific limit\n- **RNF** (Random Failure) — 0.1% random probability\n\nAny single failure → Machine failure = 1`,
+
+  "q learning": `**Q-Learning Agent Architecture:**\n\n- State space: (battery_bin, rssi_bin, budget_bin) = **27 states** (3³)\n- Action space: {LOCAL=0, EDGE=1, CLOUD=2}\n- Hyperparameters: α=0.1, γ=0.9, ε=0.3→0.01 (decay 0.995)\n- Episodes: **3,000** training simulations\n\nThe Q-table learns to:\n- Prefer LOCAL for tight budgets (< 60ms)\n- Prefer CLOUD when battery < 20%\n- Prefer EDGE under good connectivity + moderate battery`,
+
+  "lstm": `**LSTM for Predictive Maintenance:**\n\nLSTM captures **temporal dependencies** across a sliding window of 5 consecutive sensor readings — detecting pre-failure patterns that i.i.d. classifiers miss.\n\nArchitecture:\n- Input: (window=5, features=9)\n- LSTM(64, return_sequences=True) + Dropout(0.3)\n- LSTM(32) + Dropout(0.2)\n- Dense(32, ReLU) → Dense(1, Sigmoid)\n\n*Without TensorFlow: sklearn MLP on flattened window (5×9=45 features)*`,
+
+  "feature importance": `**Top features by Random Forest importance:**\n\n1. **Tool wear [min]** — directly linked to TWF and OSF\n2. **Torque [Nm]** — power failure + overstrain indicator\n3. **Wear_rate** (engineered: wear×torque) — combined stress proxy\n4. **Rotational speed [rpm]** — HDF trigger\n5. **Power_proxy** (engineered: torque×speed) — PWF detection\n\n3 engineered features (Temp_diff, Power_proxy, Wear_rate) contribute ~40% of total importance.`,
+
+  "latency": `**Latency benchmarks:**\n\n| Tier | Mean | Std Dev | Measured how? |\n|---|---|---|---|\n| LOCAL | ~1–5 ms | — | \`time.perf_counter()\` on RF.predict() |\n| EDGE | ~80 ms | 25 ms | Simulated (Gaussian) |\n| CLOUD | ~180 ms | 60 ms | Simulated (Gaussian) |\n\nThe threshold policy picks LOCAL when budget ≤ 50ms (fits within ~5ms LOCAL latency). Q-learning learns to avoid CLOUD for budgets under 100ms.`,
+
+  "clustering": `**Clustering results (PCA 2D):**\n\n| Algorithm | Silhouette Score | Notes |\n|---|---|---|\n| K-Means | 0.333 | 3 clusters, good separation |\n| K-Medoids | 0.334 | Slightly better than K-Means |\n| Hierarchical | 0.285 | Agglomerative, 3 clusters |\n| DBSCAN | N/A | Most points = noise at ε=0.5 |\n\nSilhouette ~0.33 means moderate cluster separation — expected since failures overlap in feature space.`,
+
+  "default": `I can answer questions about this AIoT ML project. Try asking:\n- "What is this project?"\n- "Which model performed best?"\n- "How does Q-learning work?"\n- "What are the failure modes?"\n- "Explain the LSTM architecture"\n- "Show me feature importance"\n- "How is latency measured?"\n- "Clustering results?"`
+};
+
+function findAnswer(q) {
+  q = q.toLowerCase();
+  if(q.includes('offload') || q.includes('cloud') || q.includes('edge') || q.includes('local') || q.includes('tier') || q.includes('policy')) return KB['offloading'];
+  if(q.includes('best model') || q.includes('best classifier') || q.includes('top model') || q.includes('which model')) return KB['best model'];
+  if(q.includes('failure mode') || q.includes('twf') || q.includes('hdf') || q.includes('pwf') || q.includes('osf') || q.includes('rnf')) return KB['failure modes'];
+  if(q.includes('q-learn') || q.includes('qlearn') || q.includes('reinforcement') || q.includes('q learn') || q.includes('qtable')) return KB['q learning'];
+  if(q.includes('lstm') || q.includes('recurrent') || q.includes('rnn') || q.includes('temporal') || q.includes('sequence')) return KB['lstm'];
+  if(q.includes('feature import') || q.includes('important feature') || q.includes('top feature')) return KB['feature importance'];
+  if(q.includes('latency') || q.includes('latenc') || q.includes('perf_counter') || q.includes('benchmark')) return KB['latency'];
+  if(q.includes('cluster') || q.includes('kmean') || q.includes('dbscan') || q.includes('silhouette')) return KB['clustering'];
+  if(q.includes('what is') || q.includes('project') || q.includes('overview') || q.includes('summary') || q.includes('about')) return KB['what is this project'];
+  if(q.includes('ann') || q.includes('neural') || q.includes('deep learn') || q.includes('dl ') || q.includes('mlp')) return KB['lstm'].replace('LSTM','ANN/LSTM');
+  return KB['default'];
+}
+
+function renderMarkdown(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+    .replace(/\*(.*?)\*/g,'<i>$1</i>')
+    .replace(/`(.*?)`/g,'<code>$1</code>')
+    .replace(/\n\n/g,'</p><p style="margin-top:8px">')
+    .replace(/\n- /g,'<br/>• ')
+    .replace(/\n\|/g,'<br/>')
+    .replace(/^/,'<p>').replace(/$/,'</p>');
+}
+
+function addMessage(text, isUser) {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (isUser ? 'user' : '');
+  const av = `<div class="avatar ${isUser?'user':'ai'}">${isUser?'👤':'🤖'}</div>`;
+  const bubble = `<div class="bubble ${isUser?'user-bubble':''}">${isUser ? text : renderMarkdown(text)}</div>`;
+  div.innerHTML = isUser ? bubble + av : av + bubble;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addTyping() {
+  const msgs = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.id = 'typing-indicator';
+  div.innerHTML = `<div class="avatar ai">🤖</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing-indicator');
+  if(t) t.remove();
+}
+
+async function sendMsg() {
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  inp.style.height = 'auto';
+  document.getElementById('send-btn').disabled = true;
+  addMessage(text, true);
+  addTyping();
+  await new Promise(r => setTimeout(r, 600 + Math.random()*600));
+  removeTyping();
+  addMessage(findAnswer(text), false);
+  document.getElementById('send-btn').disabled = false;
+  inp.focus();
+}
+
+// Quick chips
+const CHIPS = ['Best model?','How does Q-learning work?','Failure modes explained','Feature importance','LSTM architecture','Latency benchmarks','Clustering results','Project overview'];
+const chipsEl = document.getElementById('chips');
+CHIPS.forEach(c => {
+  const el = document.createElement('div');
+  el.className = 'chip';
+  el.textContent = c;
+  el.onclick = () => {
+    document.getElementById('chat-input').value = c;
+    sendMsg();
+  };
+  chipsEl.appendChild(el);
+});
+
+// Enter key
+document.getElementById('chat-input').addEventListener('keydown', e => {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+});
+// Auto-resize
+document.getElementById('chat-input').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Welcome message
+setTimeout(() => {
+  addMessage("Hey! 👋 I'm your **AIoT ML project assistant**. I know everything about this project — the dataset, classifiers, offloading agent, Q-learning, LSTM, A* scheduler, and viva prep.\n\nAsk me anything, or click one of the chips below to get started!", false);
+}, 400);
+
+// Init slider
+updateDecision();
+</script>
+</body>
+</html>
