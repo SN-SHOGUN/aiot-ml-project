@@ -61,14 +61,16 @@ def _pairs(messages: list[dict]) -> list[dict]:
     return pairs
 
 
-def _show_evidence(items: list[dict]) -> None:
-    for ev in items:
+def _show_evidence(items: list[dict], key_prefix: str = "ev") -> None:
+    for i, ev in enumerate(items):
         if ev.get("figure") is not None:
-            st.plotly_chart(ev["figure"], **_kw(st.plotly_chart))
+            kw = _kw(st.plotly_chart)
+            kw["key"] = f"{key_prefix}_fig_{i}_{ev.get('name', 'fig')}"
+            st.plotly_chart(ev["figure"], **kw)
     if not items:
         return
     with st.expander("Evidence"):
-        for ev in items:
+        for i, ev in enumerate(items):
             st.markdown(f"**{ev.get('name')}** `{ev.get('args')}`")
             if ev.get("text"):
                 st.write(ev["text"])
@@ -228,16 +230,16 @@ def render_ask() -> None:
         st.rerun()
     total = int(st.session_state["token_total"])
     over = total >= int(st.session_state["token_budget"])
-    for item in st.session_state["quick_log"]:
+    for qi, item in enumerate(st.session_state["quick_log"]):
         with st.chat_message("assistant"):
             st.markdown(item.get("text") or item.get("name"))
-            _show_evidence([item])
+            _show_evidence([item], key_prefix=f"quick_{qi}")
             st.caption(f"this answer: 0 tokens | session total: {total} tokens | quick action, no API call")
-    for msg in st.session_state["messages"]:
+    for mi, msg in enumerate(st.session_state["messages"]):
         with st.chat_message(msg["role"]):
             st.markdown(msg.get("content") or "")
             if msg["role"] == "assistant":
-                _show_evidence(msg.get("evidence") or [])
+                _show_evidence(msg.get("evidence") or [], key_prefix=f"msg_{mi}")
                 st.caption(f"this answer: {msg.get('tokens', 0)} tokens | session total: {total} tokens")
     if mode == "researcher" and (st.session_state["messages"] or st.session_state["quick_log"]):
         st.download_button(

@@ -41,4 +41,6 @@ def render_upload() -> None:
     if result.get("table") is not None:
         st.dataframe(result["table"], **_kw(st.dataframe))
     if result.get("figure") is not None:
-        st.plotly_chart(result["figure"], **_kw(st.plotly_chart))
+        kw = _kw(st.plotly_chart)
+        kw["key"] = "upload_result_fig"
+        st.plotly_chart(result["figure"], **kw)
